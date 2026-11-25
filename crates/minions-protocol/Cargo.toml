@@ -1,0 +1,15 @@
+[package]
+name = "minions-protocol"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Minion (singular) and Minions (plural) local-cloud collaboration protocols"
+
+[dependencies]
+minions-core = { path = "../minions-core" }
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+minions-clients = { path = "../minions-clients" }
