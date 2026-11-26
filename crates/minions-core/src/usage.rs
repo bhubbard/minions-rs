@@ -141,3 +141,49 @@ mod tests {
         assert!((cost - 3.15).abs() < 1e-6);
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+
+    fn any_usage() -> Usage {
+        Usage {
+            completion_tokens: kani::any(),
+            prompt_tokens: kani::any(),
+            cached_prompt_tokens: kani::any(),
+            seen_prompt_tokens: kani::any(),
+        }
+    }
+
+    #[kani::proof]
+    fn verify_usage_addition_no_overflow() {
+        let a = any_usage();
+        let b = any_usage();
+        let sum = a + b;
+        let mut assigned = a;
+        assigned += b;
+        assert_eq!(sum, assigned);
+        let _ = sum.total_tokens();
+        assert!(sum.prompt_tokens >= a.prompt_tokens);
+        assert!(sum.completion_tokens >= a.completion_tokens);
+    }
+
+    #[kani::proof]
+    fn verify_usage_new_prompt_tokens_bounded() {
+        let u = any_usage();
+        assert!(u.new_prompt_tokens() <= u.prompt_tokens);
+    }
+
+    #[kani::proof]
+    fn verify_estimate_cost_non_negative() {
+        let u = Usage {
+            completion_tokens: kani::any::<u32>() as u64,
+            prompt_tokens: kani::any::<u32>() as u64,
+            cached_prompt_tokens: kani::any::<u32>() as u64,
+            seen_prompt_tokens: 0,
+        };
+        let cost = estimate_cost_usd(u, ModelPricing::frontier_default());
+        assert!(!cost.is_nan());
+        assert!(cost >= 0.0);
+    }
+}

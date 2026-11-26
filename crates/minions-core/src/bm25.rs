@@ -103,3 +103,18 @@ mod tests {
         assert_eq!(top[0].index, 2);
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+
+    #[kani::proof]
+    fn verify_bm25_empty_or_zero_k_safe() {
+        let k: usize = kani::any();
+        let empty: [String; 0] = [];
+        assert!(bm25_retrieve_top_k_chunks(&empty, "query", k).is_empty());
+
+        let one = [String::new()];
+        assert!(bm25_retrieve_top_k_chunks(&one, "query", 0).is_empty());
+    }
+}

@@ -281,3 +281,31 @@ mod tests {
         assert!(chunks[1].contains("fn c()"));
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+
+    #[kani::proof]
+    #[kani::unwind(3)]
+    fn verify_chunk_by_section_empty_and_singleton() {
+        let max_chunk_size: usize = kani::any();
+        let overlap: usize = kani::any();
+        assert!(chunk_by_section("", max_chunk_size, overlap).is_empty());
+
+        let single = chunk_by_section("a", max_chunk_size, overlap);
+        assert_eq!(single.len(), 1);
+        assert_eq!(single[0], "a");
+    }
+
+    #[kani::proof]
+    fn verify_section_step_progress_all_usize() {
+        let max_chunk_size: usize = kani::any();
+        let overlap: usize = kani::any();
+        let max_len = max_chunk_size.max(1);
+        let step = max_len.saturating_sub(overlap).max(1);
+        assert!(max_len >= 1);
+        assert!(step >= 1);
+        assert!(step <= max_len);
+    }
+}
